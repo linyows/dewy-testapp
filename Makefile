@@ -18,6 +18,6 @@ dist:
 goreleaser:
 	git tag | grep v$(VERSION) || git tag v$(VERSION)
 	git push origin v$(VERSION)
-	env $(GOVERSION) goreleaser --rm-dist
+	GOVERSION=$(GOVERSION) goreleaser --rm-dist
 
 .PHONY: default dist test deps
