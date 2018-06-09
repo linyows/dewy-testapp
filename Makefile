@@ -16,8 +16,8 @@ dist:
 	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
 
 goreleaser:
-	git tag v$(VERSION)
+	git tag | grep v$(VERSION) || git tag v$(VERSION)
 	git push origin v$(VERSION)
-	goreleaser
+	goreleaser --rm-dist
 
 .PHONY: default dist test deps
