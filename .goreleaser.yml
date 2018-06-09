@@ -1,9 +1,14 @@
 builds:
+  - ldflags:
+    - -s -w -X "main.goversion={{.Env.GOVERSION}}"
   - main: main.go
-    binary: dewy-test-app
     goos:
       - windows
       - darwin
       - linux
     goarch:
       - amd64
+archive:
+  name_template: '{{.ProjectName}}-{{.Env.GOVERSION_NR}}'
+  files:
+    - none*
