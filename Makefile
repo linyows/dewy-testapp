@@ -1,6 +1,7 @@
 TEST?=./...
 NAME = "$(shell awk -F\" '/^const Name/ { print $$2; exit }' version.go)"
 VERSION = "$(shell awk -F\" '/^const Version/ { print $$2; exit }' version.go)"
+GOVERSION = "$(shell go version)"
 
 default: test
 
