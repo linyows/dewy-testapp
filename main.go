@@ -15,7 +15,7 @@ import (
 )
 
 const Name string = "dewy-testapp"
-const Version string = "1.5.0"
+const Version string = "1.6.0"
 
 func main() {
 	var err error
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Yo, %q\n", html.EscapeString(r.URL.Path))
+		fmt.Fprintf(w, "hello, %q\n", html.EscapeString(r.URL.Path))
 		io.Copy(w, r.Body)
 	})
 
