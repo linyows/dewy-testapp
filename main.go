@@ -34,7 +34,9 @@ func main() {
 	}
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, This version is %s. %q\n", Version, html.EscapeString(r.URL.Path))
+		now := time.Now().Format(time.RFC822)
+		reqPath := html.EscapeString(r.URL.Path)
+		fmt.Fprintf(w, "%s -- request: %q, version: %s\n", now, reqPath, Version)
 		io.Copy(w, r.Body)
 	})
 
