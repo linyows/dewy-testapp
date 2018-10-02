@@ -2,15 +2,16 @@ TEST?=./...
 NAME = "$(shell awk -F\" '/^const Name/ { print $$2; exit }' main.go)"
 VERSION = "$(shell awk -F\" '/^const Version/ { print $$2; exit }' main.go)"
 GOVERSION = "$(shell go version)"
+GOENV = GO111MODULE=on
 
 default: test
 
 deps:
-	brew install goreleaser/tap/goreleaser
+	$(GOENV) go get github.com/goreleaser/goreleaser
 
 test: deps
-	go test -v $(TEST) $(TESTARGS) -timeout=30s -parallel=4
-	go test -race $(TEST) $(TESTARGS)
+	$(GOENV) go test -v $(TEST) $(TESTARGS) -timeout=30s -parallel=4
+	$(GOENV) go test -race $(TEST) $(TESTARGS)
 
 dist:
 	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
