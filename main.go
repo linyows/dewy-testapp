@@ -15,7 +15,7 @@ import (
 )
 
 const Name string = "dewy-testapp"
-const Version string = "1.6.2"
+const Version string = "1.7.0"
 
 func main() {
 	var err error
