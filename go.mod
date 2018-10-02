@@ -9,6 +9,7 @@ require (
 	github.com/blakesmith/ar v0.0.0-20150311145944-8bd4349a67f2 // indirect
 	github.com/caarlos0/ctrlc v1.0.0 // indirect
 	github.com/campoy/unique v0.0.0-20180121183637-88950e537e7e // indirect
+	github.com/docker/docker v1.13.1
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.0.0 // indirect

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/lestrrat-go/server-starter/listener"
 )
 
@@ -36,7 +37,8 @@ func main() {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now().Format(time.RFC1123)
 		reqPath := html.EscapeString(r.URL.Path)
-		fmt.Fprintf(w, "%s -- request: %q, version: %s\n", now, reqPath, Version)
+		name := namesgenerator.GetRandomName(0)
+		fmt.Fprintf(w, "%s -- request: %q, version: %s, name: %s\n", now, reqPath, Version, name)
 		io.Copy(w, r.Body)
 	})
 
