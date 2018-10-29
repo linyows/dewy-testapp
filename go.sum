@@ -30,6 +30,8 @@ github.com/goreleaser/goreleaser v0.87.0 h1:0qPjGe5y+TRhMI4WOV1UjOofwI4/14mJ6tPh
 github.com/goreleaser/goreleaser v0.87.0/go.mod h1:r02//RU0qOOAsbJvZ6Igcu34zJeqR2RTNqABERY20GM=
 github.com/goreleaser/goreleaser v0.91.2 h1:Xzleu/XLhsJoJkprSw4x9PSzKynVP0HbQD1cHgvD5Fo=
 github.com/goreleaser/goreleaser v0.91.2/go.mod h1:r02//RU0qOOAsbJvZ6Igcu34zJeqR2RTNqABERY20GM=
+github.com/goreleaser/goreleaser v0.92.0 h1:tZsTgJeBKVoCtz077I1IfQMg0cLnuTM5ZCRhfDvIVxE=
+github.com/goreleaser/goreleaser v0.92.0/go.mod h1:r02//RU0qOOAsbJvZ6Igcu34zJeqR2RTNqABERY20GM=
 github.com/goreleaser/nfpm v0.9.5 h1:ntRGZSucXRjoCk6FdwJaXcCZxZZu7YoqX7UH5IC13l4=
 github.com/goreleaser/nfpm v0.9.5/go.mod h1:kn0Dps10Osi7V2icEXFTBRZhmiuGPUizzZVw/WQtQ/k=
 github.com/imdario/mergo v0.3.6 h1:xTNEAn+kxVO7dTZGu0CegyqKZmoWFI0rF8UxjlB2d28=
