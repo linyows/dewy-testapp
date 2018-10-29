@@ -1,3 +1,6 @@
+before:
+  hooks:
+    - go mod download
 builds:
   - ldflags:
     - -s -w -X "main.goversion={{.Env.GOVERSION}}"
