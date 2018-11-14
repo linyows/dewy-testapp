@@ -3,11 +3,12 @@ NAME = "$(shell awk -F\" '/^const Name/ { print $$2; exit }' main.go)"
 VERSION = "$(shell awk -F\" '/^const Version/ { print $$2; exit }' main.go)"
 GOVERSION = "$(shell go version)"
 GOENV = GO111MODULE=on
+GODEVENV = GO111MODULE=off
 
 default: test
 
 deps:
-	$(GOENV) go get github.com/goreleaser/goreleaser
+	$(GODEVENV) go get github.com/goreleaser/goreleaser
 
 test: deps
 	$(GOENV) go test -v $(TEST) $(TESTARGS) -timeout=30s -parallel=4
