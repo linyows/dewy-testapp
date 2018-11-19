@@ -1,5 +1,5 @@
 TEST ?= ./...
-TAG ?= $(shell git fetch && git tag|sed s/v//g|sort -t . -n -k1,1 -k2,2 -k3,3|tail -n1)
+TAG ?= $(shell git fetch --tags && git describe --tags `git rev-list --tags --max-count=1`)
 
 default: test
 
