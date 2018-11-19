@@ -1,6 +1,5 @@
 TEST ?= ./...
-VERSION ?= $(shell awk -F'"' '/\tversion.*=/ { print $$2; exit }' main.go)
-GOVERSION ?= $(shell go version | awk '{ if (sub(/go version go/, "v")) print }' | awk '{print $$1 "-" $$2}')
+TAG ?= $(shell git fetch && git tag|sed s/v//g|sort -t . -n -k1,1 -k2,2 -k3,3|tail -n1)
 
 default: test
 
@@ -12,11 +11,10 @@ dist:
 	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
 
 tag:
-	git tag | grep v$(VERSION) || git tag v$(VERSION)
-	git push origin v$(VERSION)
+	@echo $(TAG)
 
 goreleaser:
 	GO111MODULE=off go get github.com/goreleaser/goreleaser
-	GOVERSION=$(GOVERSION) goreleaser --skip-publish
+	goreleaser --skip-publish --snapshot
 
 .PHONY: default dist test deps
