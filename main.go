@@ -15,8 +15,11 @@ import (
 	"github.com/lestrrat-go/server-starter/listener"
 )
 
-const Name string = "dewy-testapp"
-const Version string = "1.7.11"
+var (
+	version = "1.7.11-dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
 func main() {
 	var err error
