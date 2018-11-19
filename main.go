@@ -38,9 +38,10 @@ func main() {
 	}
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now().Format(time.RFC1123)
 		reqPath := html.EscapeString(r.URL.Path)
 		name := namesgenerator.GetRandomName(0)
-		fmt.Fprintf(w, "%s -- request: %q, version: %s, name: %s\n", date, reqPath, version, name)
+		fmt.Fprintf(w, "%s -- request: %q, version: %s, name: %s\n", now, reqPath, version, name)
 		io.Copy(w, r.Body)
 	})
 

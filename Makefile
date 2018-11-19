@@ -13,8 +13,9 @@ dist:
 tag:
 	@echo $(TAG)
 
+goreleaser: export GO111MODULE=off
 goreleaser:
-	GO111MODULE=off go get github.com/goreleaser/goreleaser
-	goreleaser --skip-publish --snapshot
+	go get github.com/goreleaser/goreleaser
+	goreleaser --skip-validate --rm-dist
 
 .PHONY: default dist test deps
