@@ -1,25 +1,22 @@
-TEST?=./...
-NAME = "$(shell awk -F\" '/^const Name/ { print $$2; exit }' main.go)"
-VERSION = "$(shell awk -F\" '/^const Version/ { print $$2; exit }' main.go)"
-GOVERSION = "$(shell go version)"
-GOENV = GO111MODULE=on
-GODEVENV = GO111MODULE=off
+TEST ?= ./...
+VERSION ?= $(shell awk -F'"' '/\tversion.*=/ { print $$2; exit }' main.go)
+GOVERSION ?= $(shell go version | awk '{ if (sub(/go version go/, "v")) print }' | awk '{print $$1 "-" $$2}')
 
 default: test
 
-deps:
-	$(GODEVENV) go get github.com/goreleaser/goreleaser
-
-test: deps
-	$(GOENV) go test -v $(TEST) $(TESTARGS) -timeout=30s -parallel=4
-	$(GOENV) go test -race $(TEST) $(TESTARGS)
+test:
+	go test -v $(TEST) $(TESTARGS) -timeout=30s -parallel=4
+	go test -race $(TEST) $(TESTARGS)
 
 dist:
 	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
 
-goreleaser:
+tag:
 	git tag | grep v$(VERSION) || git tag v$(VERSION)
 	git push origin v$(VERSION)
-	GOVERSION=$(GOVERSION) goreleaser --rm-dist
+
+goreleaser:
+	GO111MODULE=off go get github.com/goreleaser/goreleaser
+	GOVERSION=$(GOVERSION) goreleaser --skip-publish
 
 .PHONY: default dist test deps
