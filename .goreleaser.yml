@@ -1,17 +1,25 @@
-before:
-  hooks:
-    - go mod download
 builds:
-  - ldflags:
-    - -s -w -X "main.goversion={{.Env.GOVERSION}}"
   - main: main.go
     goos:
-      - windows
       - darwin
+      - windows
       - linux
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
 archive:
   name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
   files:
     - none*
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
