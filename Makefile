@@ -1,5 +1,11 @@
 TEST ?= ./...
-TAG ?= $(shell git fetch --tags && git describe --tags `git rev-list --tags --max-count=1`)
+
+LTAG ?= $(shell git fetch --tags && git describe --tags `git rev-list --tags --max-count=1`)
+LMMP ?= $(shell echo $(LTAG) | cut -d'-' -f1)
+LPRE ?= $(shell echo $(LTAG) | cut -d'-' -f2 | awk -F . '{print $$2}')
+LPATCH ?= $(shell echo $(LMMP) | cut -d'.' -f3)
+TAG ?= $(shell echo $(LMMP) | cut -d'.' -f1 -f2).$(shell expr $(LPATCH) + 1)
+PRETAG ?= $(TAG)-$(USER).$(shell test -z $(LPRE) && echo 0 || expr $(LPRE) + 1)
 
 default: test
 
@@ -11,7 +17,10 @@ dist:
 	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
 
 tag:
-	@echo $(TAG)
+	git tag $(TAG) && git push origin $(TAG)
+
+pretag:
+	git tag $(PRETAG) && git push origin $(PRETAG)
 
 goreleaser: export GO111MODULE=off
 goreleaser:
