@@ -25,7 +25,10 @@ func main() {
 	var err error
 	var listeners []net.Listener
 
-	if len(os.Args) > 0 {
+	fmt.Printf("%#v\n", os.Args)
+
+	port := os.Getenv("SERVER_STARTER_PORT")
+	if len(port) > 0 {
 		listeners, err = listener.ListenAll()
 	} else {
 		var l net.Listener

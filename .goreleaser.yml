@@ -7,7 +7,6 @@ builds:
     goarch:
       - amd64
     env:
-      - CGO_ENABLED=0
       - GO111MODULE=on
 archive:
   name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
@@ -23,5 +22,3 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
-release:
-  prerelease: true
