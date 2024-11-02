@@ -9,16 +9,16 @@ test:
 	go test -v $(TEST) $(TESTARGS) -timeout=30s -parallel=4
 	go test -race $(TEST) $(TESTARGS)
 
-dist:
-	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
-
 tag:
 	git tag $(TAG) && git push origin $(TAG)
 
 goreleaser:
 	go get github.com/goreleaser/goreleaser
 
+release:
+	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
+
 dist:
-	goreleaser --skip-validate --rm-dist
+	goreleaser --snapshot --skip-publish --rm-dist
 
 .PHONY: default dist test deps
