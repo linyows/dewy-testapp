@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/lestrrat-go/server-starter/listener"
+	"github.com/moby/docker/pkg/namesgenerator"
 )
 
 var (
