@@ -15,9 +15,10 @@ dist:
 tag:
 	git tag $(TAG) && git push origin $(TAG)
 
-goreleaser: export GO111MODULE=off
 goreleaser:
 	go get github.com/goreleaser/goreleaser
+
+dist:
 	goreleaser --skip-validate --rm-dist
 
 .PHONY: default dist test deps
