@@ -15,10 +15,10 @@ tag:
 goreleaser:
 	go get github.com/goreleaser/goreleaser
 
-release: goreleaser
-	@test -z $(GITHUB_TOKEN) || goreleaser --rm-dist --skip-validate
+release:
+	@test -z $(GITHUB_TOKEN) || goreleaser release
 
 dist:
-	goreleaser --snapshot --skip-publish --rm-dist
+	goreleaser r --snapshot --skip-publish --rm-dist
 
 .PHONY: default dist test deps
