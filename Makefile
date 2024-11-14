@@ -15,8 +15,8 @@ tag:
 goreleaser:
 	go get github.com/goreleaser/goreleaser
 
-release:
-	@test -z $(GITHUB_TOKEN) || $(MAKE) goreleaser
+release: goreleaser
+	@test -z $(GITHUB_TOKEN) || goreleaser --rm-dist --skip-validate
 
 dist:
 	goreleaser --snapshot --skip-publish --rm-dist
