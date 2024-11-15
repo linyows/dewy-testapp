@@ -16,9 +16,9 @@ goreleaser:
 	go get github.com/goreleaser/goreleaser
 
 release:
-	@test -z $(GITHUB_TOKEN) || goreleaser release
+	@test -z $(GITHUB_TOKEN) || goreleaser release --clean
 
 dist:
-	goreleaser r --snapshot --skip-publish --rm-dist
+	goreleaser r --clean --snapshot
 
 .PHONY: default dist test deps
