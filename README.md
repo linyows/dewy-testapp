@@ -1,4 +1,4 @@
-Echo Server for DEWY test
-=========================
+Dewy TestApp
+==
 
 https://github.com/linyows/dewy
