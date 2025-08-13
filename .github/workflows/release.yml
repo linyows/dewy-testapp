@@ -16,9 +16,10 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Run goreleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
+          distribution: goreleaser
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
