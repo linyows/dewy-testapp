@@ -18,6 +18,8 @@ import (
 
 type AppStatus struct {
 	Version   string            `json:"version"`
+	Commit    string            `json:"commit"`
+	BuildDate string            `json:"build_date"`
 	StartTime time.Time         `json:"start_time"`
 	Uptime    string            `json:"uptime"`
 	Listeners []string          `json:"listeners"`
@@ -29,18 +31,27 @@ const (
 	fallbackPort = "3333"
 )
 
+var (
+	version = "0.0.0-dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
-	version := getEnv("APP_VERSION", "1.0.0")
 	startTime := time.Now()
 
 	log.Printf("dewy-testapp v%s starting", version)
 
-	// Try to get listeners from server-starter first
-	listeners, err := listener.ListenAll()
-	if err != nil {
-		log.Printf("Failed to get listeners from server-starter: %v", err)
-		log.Printf("Falling back to standalone mode on port %s", fallbackPort)
-		listeners = nil
+	var err error
+	var listeners []net.Listener
+
+	if os.Getenv("SERVER_STARTER_PORT") != "" {
+		listeners, err = listener.ListenAll()
+		if err != nil {
+			log.Printf("Failed to get listeners from server-starter: %v", err)
+			log.Printf("Falling back to standalone mode on port %s", fallbackPort)
+			listeners = nil
+		}
 	}
 
 	var mode string
@@ -161,6 +172,8 @@ func createHandler(version string, startTime time.Time, listeners []string, curr
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		status := AppStatus{
 			Version:   version,
+			Commit:    commit,
+			BuildDate: date,
 			StartTime: startTime,
 			Uptime:    time.Since(startTime).String(),
 			Listeners: listeners,
