@@ -6,9 +6,6 @@ on:
       - completed
     branches:
       - main
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
     inputs:
       run_id:
@@ -23,7 +20,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     
     steps:
       - name: Download release artifacts
@@ -39,8 +36,6 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version }}" ]]; then
             VERSION="${{ inputs.version }}"
-          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
           else
             # Extract version from one of the archive files
             ARCHIVE_FILE=$(ls dist/*.tar.gz 2>/dev/null | head -1)
@@ -92,7 +87,7 @@ jobs:
           done
 
       - name: Update latest symlinks
-        if: github.ref_type == 'tag'
+        if: github.event_name == 'workflow_run' && contains(steps.version.outputs.version, 'v')
         run: |
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
           
