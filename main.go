@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -35,12 +36,19 @@ var (
 	version = "0.0.0-dev"
 	commit  = "none"
 	date    = "unknown"
+	jsonLog = flag.Bool("json", false, "Output logs in JSON format")
 )
 
 func main() {
+	flag.Parse()
+	
+	if *jsonLog {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	}
+	
 	startTime := time.Now()
 
-	log.Printf("dewy-testapp v%s starting", version)
+	slog.Info("dewy-testapp starting", "version", version)
 
 	var err error
 	var listeners []net.Listener
@@ -48,8 +56,8 @@ func main() {
 	if os.Getenv("SERVER_STARTER_PORT") != "" {
 		listeners, err = listener.ListenAll()
 		if err != nil {
-			log.Printf("Failed to get listeners from server-starter: %v", err)
-			log.Printf("Falling back to standalone mode on port %s", fallbackPort)
+			slog.Error("Failed to get listeners from server-starter", "error", err)
+			slog.Info("Falling back to standalone mode", "port", fallbackPort)
 			listeners = nil
 		}
 	}
@@ -61,20 +69,21 @@ func main() {
 	if len(listeners) > 0 {
 		// Server-starter mode
 		mode = "server-starter"
-		log.Printf("Server-starter mode: received %d listeners", len(listeners))
+		slog.Info("Server-starter mode", "listeners_count", len(listeners))
 		servers = setupServerStarterMode(version, startTime, listeners, &wg)
 	} else {
 		// Standalone mode (fallback)
 		mode = "standalone"
-		log.Printf("Standalone mode: starting on port %s", fallbackPort)
+		slog.Info("Standalone mode starting", "port", fallbackPort)
 		servers = setupStandaloneMode(version, startTime, fallbackPort, &wg)
 	}
 
 	if len(servers) == 0 {
-		log.Fatal("No servers could be started")
+		slog.Error("No servers could be started")
+		os.Exit(1)
 	}
 
-	log.Printf("All %d servers started successfully in %s mode", len(servers), mode)
+	slog.Info("All servers started successfully", "servers_count", len(servers), "mode", mode)
 
 	// Graceful shutdown
 	shutdown := make(chan struct{})
@@ -83,14 +92,14 @@ func main() {
 
 	go func() {
 		sig := <-c
-		log.Printf("Received signal %s, shutting down servers...", sig)
+		slog.Info("Received signal, shutting down servers", "signal", sig.String())
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		for i, server := range servers {
 			if err := server.Shutdown(ctx); err != nil {
-				log.Printf("Server %d shutdown error: %v", i, err)
+				slog.Error("Server shutdown error", "server_index", i, "error", err)
 			}
 		}
 		close(shutdown)
@@ -99,11 +108,11 @@ func main() {
 	// Wait for shutdown signal or all servers to finish
 	select {
 	case <-shutdown:
-		log.Println("Shutdown signal received")
+		slog.Info("Shutdown signal received")
 	}
 
 	wg.Wait()
-	log.Println("All servers stopped gracefully")
+	slog.Info("All servers stopped gracefully")
 }
 
 func setupServerStarterMode(version string, startTime time.Time, listeners []net.Listener, wg *sync.WaitGroup) []*http.Server {
@@ -128,13 +137,13 @@ func setupServerStarterMode(version string, startTime time.Time, listeners []net
 		wg.Add(1)
 		go func(srv *http.Server, listener net.Listener, address string) {
 			defer wg.Done()
-			log.Printf("Starting HTTP server on %s (server-starter)", address)
+			slog.Info("Starting HTTP server", "address", address, "mode", "server-starter")
 			if err := srv.Serve(listener); err != http.ErrServerClosed {
-				log.Printf("Server on %s failed: %v", address, err)
+				slog.Error("Server failed", "address", address, "error", err)
 			}
 		}(server, l, addr)
 
-		log.Printf("Server-starter listener %d: %s", i, addr)
+		slog.Info("Server-starter listener", "index", i, "address", addr)
 	}
 
 	return servers
@@ -156,9 +165,9 @@ func setupStandaloneMode(version string, startTime time.Time, port string, wg *s
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Printf("Starting HTTP server on %s (standalone)", addr)
+		slog.Info("Starting HTTP server", "address", addr, "mode", "standalone")
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Printf("Standalone server failed: %v", err)
+			slog.Error("Standalone server failed", "error", err)
 		}
 	}()
 
