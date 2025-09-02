@@ -1,4 +1,5 @@
 name: Deploy to S3
+
 on:
   workflow_run:
     workflows: ["Release by GoReleaser"]
@@ -6,22 +7,12 @@ on:
       - completed
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      run_id:
-        description: 'Release workflow run ID (for artifact download)'
-        required: true
-        type: string
-      version:
-        description: 'Version to deploy (for S3 path)'
-        required: true
-        type: string
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
@@ -34,17 +25,10 @@ jobs:
       - name: Get version from artifacts
         id: version
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version }}" ]]; then
-            VERSION="${{ inputs.version }}"
-          else
-            # Extract version from one of the archive files
-            ARCHIVE_FILE=$(ls dist/*.tar.gz 2>/dev/null | head -1)
-            if [[ -n "$ARCHIVE_FILE" ]]; then
-              BASENAME=$(basename "$ARCHIVE_FILE" .tar.gz)
-              VERSION=$(echo "$BASENAME" | grep -oE '_[^_]+$' | sed 's/^_//' || echo "unknown")
-            else
-              VERSION="unknown"
-            fi
+          ARCHIVE_FILE=$(ls dist/*.tar.gz 2>/dev/null | head -1)
+          if [[ -n "$ARCHIVE_FILE" ]]; then
+            BASENAME=$(basename "$ARCHIVE_FILE" .tar.gz)
+            VERSION=$(echo "$BASENAME" | grep -oE '_[^_]+$' | sed 's/^_//' || echo "unknown")
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
@@ -52,13 +36,7 @@ jobs:
       - name: Show deployment info
         run: |
           echo "🔍 Deployment Information:"
-          echo "  Event: ${{ github.event_name }}"
           echo "  Version: ${{ steps.version.outputs.version }}"
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "  Run ID: ${{ inputs.run_id }}"
-            echo "  Input Version: ${{ inputs.version }}"
-          fi
-          echo
           echo "📦 Available archives in dist/:"
           ls -la dist/*.tar.gz 2>/dev/null || echo "No .tar.gz files found"
           ls -la dist/*.zip 2>/dev/null || echo "No .zip files found"
@@ -74,10 +52,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
-          
           echo "🚀 Deploying version $VERSION to S3..."
-          
-          # Upload all archives from dist/ directory with version/archive-name structure
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then
               filename=$(basename "$archive")
@@ -87,13 +62,9 @@ jobs:
           done
 
       - name: Update latest symlinks
-        if: github.event_name == 'workflow_run' && contains(steps.version.outputs.version, 'v')
         run: |
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
-          
           echo "🔗 Updating latest versions..."
-          
-          # Create latest directory with copies for tagged releases
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then
               filename=$(basename "$archive")
