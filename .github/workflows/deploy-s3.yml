@@ -2,11 +2,8 @@ name: Deploy to S3
 
 on:
   workflow_run:
-    workflows: ["Release by GoReleaser"]
-    types:
-      - completed
-    branches:
-      - main
+    workflows: [Release]
+    types: [completed]
 
 jobs:
   deploy:
