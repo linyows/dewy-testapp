@@ -35,11 +35,9 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version }}" ]]; then
             VERSION="${{ inputs.version }}"
           else
-            # Extract version from one of the archive files
-            ARCHIVE_FILE=$(ls dist/*.tar.gz 2>/dev/null | head -1)
-            if [[ -n "$ARCHIVE_FILE" ]]; then
-              BASENAME=$(basename "$ARCHIVE_FILE" .tar.gz)
-              VERSION=$(echo "$BASENAME" | grep -oE '_[^_]+$' | sed 's/^_//' || echo "unknown")
+            # Extract version from metadata.json
+            if [[ -f "dist/metadata.json" ]]; then
+              VERSION=$(cat dist/metadata.json | grep -o '"tag":"[^"]*' | cut -d'"' -f4)
             else
               VERSION="unknown"
             fi
@@ -85,22 +83,6 @@ jobs:
             fi
           done
 
-      - name: Update latest versions
-        if: github.event_name == 'workflow_run' && contains(steps.version.outputs.version, 'v')
-        run: |
-          GCS_BUCKET="${{ secrets.GCS_BUCKET }}"
-
-          echo "🔗 Updating latest versions..."
-
-          # Create latest directory with copies for tagged releases
-          for archive in dist/*.tar.gz dist/*.zip; do
-            if [[ -f "$archive" ]]; then
-              filename=$(basename "$archive")
-              gsutil cp "$archive" "gs://${GCS_BUCKET}/latest/${filename}"
-              echo "✅ Updated latest: gs://${GCS_BUCKET}/latest/${filename}"
-            fi
-          done
-
       - name: Set public access (optional)
         if: vars.GCS_PUBLIC_ACCESS == 'true'
         run: |
@@ -111,9 +93,5 @@ jobs:
 
           # Make files publicly accessible
           gsutil -m acl ch -r -u AllUsers:R "gs://${GCS_BUCKET}/${VERSION}/"
-
-          if [[ "${{ github.event_name }}" == "workflow_run" && "${{ contains(steps.version.outputs.version, 'v') }}" == "true" ]]; then
-            gsutil -m acl ch -r -u AllUsers:R "gs://${GCS_BUCKET}/latest/"
-          fi
 
           echo "✅ Files are now publicly accessible"

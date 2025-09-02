@@ -35,11 +35,9 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version }}" ]]; then
             VERSION="${{ inputs.version }}"
           else
-            # Extract version from one of the archive files
-            ARCHIVE_FILE=$(ls dist/*.tar.gz 2>/dev/null | head -1)
-            if [[ -n "$ARCHIVE_FILE" ]]; then
-              BASENAME=$(basename "$ARCHIVE_FILE" .tar.gz)
-              VERSION=$(echo "$BASENAME" | grep -oE '_[^_]+$' | sed 's/^_//' || echo "unknown")
+            # Extract version from metadata.json
+            if [[ -f "dist/metadata.json" ]]; then
+              VERSION=$(cat dist/metadata.json | grep -o '"tag":"[^"]*' | cut -d'"' -f4)
             else
               VERSION="unknown"
             fi
@@ -75,27 +73,11 @@ jobs:
 
           echo "🚀 Deploying version $VERSION to S3..."
 
-          # Upload all archives from dist/ directory with version/archive-name structure
+          # Upload all archives from dist/ directory with version structure
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then
               filename=$(basename "$archive")
               aws s3 cp "$archive" "s3://${S3_BUCKET}/${VERSION}/${filename}"
               echo "✅ Uploaded: s3://${S3_BUCKET}/${VERSION}/${filename}"
-            fi
-          done
-
-      - name: Update latest symlinks
-        if: github.event_name == 'workflow_run' && contains(steps.version.outputs.version, 'v')
-        run: |
-          S3_BUCKET="${{ secrets.S3_BUCKET }}"
-
-          echo "🔗 Updating latest versions..."
-
-          # Create latest directory with copies for tagged releases
-          for archive in dist/*.tar.gz dist/*.zip; do
-            if [[ -f "$archive" ]]; then
-              filename=$(basename "$archive")
-              aws s3 cp "$archive" "s3://${S3_BUCKET}/latest/${filename}"
-              echo "✅ Updated latest: s3://${S3_BUCKET}/latest/${filename}"
             fi
           done
