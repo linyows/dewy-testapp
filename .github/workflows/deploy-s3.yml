@@ -4,8 +4,6 @@ on:
     workflows: ["Release by GoReleaser"]
     types:
       - completed
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       run_id:
@@ -21,7 +19,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    
+
     steps:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
@@ -74,9 +72,9 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
-          
+
           echo "🚀 Deploying version $VERSION to S3..."
-          
+
           # Upload all archives from dist/ directory with version/archive-name structure
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then
@@ -90,9 +88,9 @@ jobs:
         if: github.event_name == 'workflow_run' && contains(steps.version.outputs.version, 'v')
         run: |
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
-          
+
           echo "🔗 Updating latest versions..."
-          
+
           # Create latest directory with copies for tagged releases
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then

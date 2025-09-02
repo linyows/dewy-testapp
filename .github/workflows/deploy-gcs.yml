@@ -4,8 +4,6 @@ on:
     workflows: ["Release by GoReleaser"]
     types:
       - completed
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       run_id:
@@ -21,7 +19,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    
+
     steps:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
@@ -75,9 +73,9 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           GCS_BUCKET="${{ secrets.GCS_BUCKET }}"
-          
+
           echo "🚀 Deploying version $VERSION to GCS..."
-          
+
           # Upload all archives from dist/ directory with version/archive-name structure
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then
@@ -91,9 +89,9 @@ jobs:
         if: github.event_name == 'workflow_run' && contains(steps.version.outputs.version, 'v')
         run: |
           GCS_BUCKET="${{ secrets.GCS_BUCKET }}"
-          
+
           echo "🔗 Updating latest versions..."
-          
+
           # Create latest directory with copies for tagged releases
           for archive in dist/*.tar.gz dist/*.zip; do
             if [[ -f "$archive" ]]; then
@@ -108,14 +106,14 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           GCS_BUCKET="${{ secrets.GCS_BUCKET }}"
-          
+
           echo "🌐 Setting public access..."
-          
+
           # Make files publicly accessible
           gsutil -m acl ch -r -u AllUsers:R "gs://${GCS_BUCKET}/${VERSION}/"
-          
+
           if [[ "${{ github.event_name }}" == "workflow_run" && "${{ contains(steps.version.outputs.version, 'v') }}" == "true" ]]; then
             gsutil -m acl ch -r -u AllUsers:R "gs://${GCS_BUCKET}/latest/"
           fi
-          
+
           echo "✅ Files are now publicly accessible"
