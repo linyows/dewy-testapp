@@ -33,19 +33,26 @@ const (
 )
 
 var (
-	version = "0.0.0-dev"
-	commit  = "none"
-	date    = "unknown"
-	jsonLog = flag.Bool("json", false, "Output logs in JSON format")
+	version    = "0.0.0-dev"
+	commit     = "none"
+	date       = "unknown"
+	jsonLog    = flag.Bool("json", false, "Output logs in JSON format")
+	versionOpt = flag.Bool("version", false, "Show version information")
+	vOpt       = flag.Bool("v", false, "Show version information")
 )
 
 func main() {
 	flag.Parse()
-	
+
+	if *versionOpt || *vOpt {
+		fmt.Printf("%s\n", version)
+		os.Exit(0)
+	}
+
 	if *jsonLog {
 		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 	}
-	
+
 	startTime := time.Now()
 
 	slog.Info("dewy-testapp starting", "version", version)
