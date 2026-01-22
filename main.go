@@ -10,11 +10,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/lestrrat-go/server-starter/listener"
+	"github.com/linyows/server-starter/listener"
 )
 
 type AppStatus struct {
@@ -39,6 +40,7 @@ var (
 	jsonLog    = flag.Bool("json", false, "Output logs in JSON format")
 	versionOpt = flag.Bool("version", false, "Show version information")
 	vOpt       = flag.Bool("v", false, "Show version information")
+	portsOpt   = flag.String("ports", "", "Comma-separated list of ports to listen on (e.g., '8080,8081,8082')")
 )
 
 func main() {
@@ -57,32 +59,38 @@ func main() {
 
 	slog.Info("dewy-testapp starting", "version", version)
 
-	var err error
-	var listeners []net.Listener
-
-	if os.Getenv("SERVER_STARTER_PORT") != "" {
-		listeners, err = listener.ListenAll()
-		if err != nil {
-			slog.Error("Failed to get listeners from server-starter", "error", err)
-			slog.Info("Falling back to standalone mode", "port", fallbackPort)
-			listeners = nil
-		}
-	}
-
 	var mode string
 	var servers []*http.Server
 	var wg sync.WaitGroup
 
-	if len(listeners) > 0 {
-		// Server-starter mode
-		mode = "server-starter"
-		slog.Info("Server-starter mode", "listeners_count", len(listeners))
-		servers = setupServerStarterMode(version, startTime, listeners, &wg)
-	} else {
-		// Standalone mode (fallback)
+	// Priority: 1. -ports argument > 2. SERVER_STARTER_PORT env > 3. fallback port
+	if *portsOpt != "" {
+		// 1. Use ports from command line argument
+		ports := parsePorts(*portsOpt)
+		if len(ports) > 0 {
+			mode = "standalone"
+			slog.Info("Standalone mode starting with specified ports", "ports", ports)
+			servers = setupStandaloneModeMulti(version, startTime, ports, &wg)
+		}
+	}
+
+	if len(servers) == 0 && os.Getenv("SERVER_STARTER_PORT") != "" {
+		// 2. Use SERVER_STARTER_PORT environment variable
+		listeners, err := listener.ListenAll()
+		if err != nil {
+			slog.Error("Failed to get listeners from server-starter", "error", err)
+		} else if len(listeners) > 0 {
+			mode = "server-starter"
+			slog.Info("Server-starter mode", "listeners_count", len(listeners))
+			servers = setupServerStarterMode(version, startTime, listeners, &wg)
+		}
+	}
+
+	if len(servers) == 0 {
+		// 3. Fallback to default port
 		mode = "standalone"
-		slog.Info("Standalone mode starting", "port", fallbackPort)
-		servers = setupStandaloneMode(version, startTime, fallbackPort, &wg)
+		slog.Info("Standalone mode starting with fallback port", "port", fallbackPort)
+		servers = setupStandaloneModeMulti(version, startTime, []string{fallbackPort}, &wg)
 	}
 
 	if len(servers) == 0 {
@@ -156,29 +164,36 @@ func setupServerStarterMode(version string, startTime time.Time, listeners []net
 	return servers
 }
 
-func setupStandaloneMode(version string, startTime time.Time, port string, wg *sync.WaitGroup) []*http.Server {
-	addr := ":" + port
-	listenerAddrs := []string{fmt.Sprintf("0.0.0.0:%s", port)}
-	endpoints := map[string]string{
-		fmt.Sprintf("port_%s", port): fmt.Sprintf("http://localhost:%s", port),
+func setupStandaloneModeMulti(version string, startTime time.Time, ports []string, wg *sync.WaitGroup) []*http.Server {
+	servers := make([]*http.Server, 0, len(ports))
+	listenerAddrs := make([]string, len(ports))
+	endpoints := make(map[string]string)
+
+	for i, port := range ports {
+		listenerAddrs[i] = fmt.Sprintf("0.0.0.0:%s", port)
+		endpoints[fmt.Sprintf("port_%s", port)] = fmt.Sprintf("http://localhost:%s", port)
 	}
 
-	mux := createHandler(version, startTime, listenerAddrs, addr, endpoints, "standalone")
-	server := &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		slog.Info("Starting HTTP server", "address", addr, "mode", "standalone")
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			slog.Error("Standalone server failed", "error", err)
+	for _, port := range ports {
+		addr := ":" + port
+		mux := createHandler(version, startTime, listenerAddrs, addr, endpoints, "standalone")
+		server := &http.Server{
+			Addr:    addr,
+			Handler: mux,
 		}
-	}()
+		servers = append(servers, server)
 
-	return []*http.Server{server}
+		wg.Add(1)
+		go func(srv *http.Server, address string) {
+			defer wg.Done()
+			slog.Info("Starting HTTP server", "address", address, "mode", "standalone")
+			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+				slog.Error("Standalone server failed", "address", address, "error", err)
+			}
+		}(server, addr)
+	}
+
+	return servers
 }
 
 func createHandler(version string, startTime time.Time, listeners []string, currentAddr string, endpoints map[string]string, mode string) *http.ServeMux {
@@ -247,4 +262,19 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func parsePorts(portsStr string) []string {
+	if portsStr == "" {
+		return nil
+	}
+	parts := strings.Split(portsStr, ",")
+	ports := make([]string, 0, len(parts))
+	for _, p := range parts {
+		port := strings.TrimSpace(p)
+		if port != "" {
+			ports = append(ports, port)
+		}
+	}
+	return ports
 }

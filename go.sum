@@ -1,4 +1,2 @@
-github.com/lestrrat-go/server-starter v0.0.0-20150105222616-88699d57aeee h1:eF432I0CAtoXrlSFtqDLWq0AyCZdQItxh+xXGZGuTMo=
-github.com/lestrrat-go/server-starter v0.0.0-20150105222616-88699d57aeee/go.mod h1:xG1VLzrCB2+uP91eXVCs5FteV/JJOjw0tr+hAM/aL/8=
-github.com/moby/docker v27.3.1+incompatible h1:sk4ZLpq3Lnod09DIg5VQyq1LbqH0Drz81GpTx7shpaU=
-github.com/moby/docker v27.3.1+incompatible/go.mod h1:Fiwv3kcZEwX8BPg1G1j43nXsufPuLuAAB2BV/uq24PY=
+github.com/linyows/server-starter v0.1.0 h1:Fv9Dko/F6v4nmR07M++gxk6GzRU8e3Sqbn4juUgvXaM=
+github.com/linyows/server-starter v0.1.0/go.mod h1:XkcHCAjzBQpeWzATmlPNg/wPy8VM97Q6294lFh8ePfk=
