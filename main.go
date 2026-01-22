@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/lestrrat-go/server-starter/listener"
+	"github.com/linyows/server-starter/listener"
 )
 
 type AppStatus struct {
