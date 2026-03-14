@@ -15,6 +15,19 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Post Slack parent message
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_CHANNEL: random
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          TS=$(curl -s -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"channel\":\"$SLACK_CHANNEL\",\"text\":\"Deploying $TAG\"}" \
+            | jq -r '.ts')
+          echo "$TS" > .slack-thread-ts
       - name: Run goreleaser
         uses: goreleaser/goreleaser-action@v6
         with:
